@@ -42,42 +42,47 @@ interface Participant {
   name: string;
 }
 
+type ObjectValues<T> = T[keyof T];
+const ACTION_TYPES = {
+  CREATE: "create",
+  UPDATE: "update",
+  DELETE: "delete",
+} as const;
+type ActionTypes = ObjectValues<typeof ACTION_TYPES>;
+
 const ParticipantsWizard = () => {
   const [participants, dispatch] = useReducer(participantsReducer, [
     { id: "0", name: "" } as Participant,
   ]);
 
-  const onAddParticipantClick = () => {
-    dispatch({ type: "add" });
+  const onAddHandler = () => {
+    dispatch({ type: ACTION_TYPES.CREATE });
   };
 
-  const onParticipantNameChange = (id: string, name: string) => {
-    dispatch({ type: "update", participant: { id, name } });
+  const onUpdateHandler = (id: string, name: string) => {
+    dispatch({ type: ACTION_TYPES.UPDATE, participant: { id, name } });
   };
 
-  const onParticipantDeletion = (participant: Participant): void => {
-    dispatch({ type: "remove", participant });
+  const onDeletionHandler = (participant: Participant): void => {
+    dispatch({ type: ACTION_TYPES.DELETE, participant });
   };
 
   const isSortDisabled = () => {
-    return (
-      participants.filter((participant) => participant.name.length > 0).length <
-      2
-    );
+    return participants.filter((participant) => participant.name).length < 2;
   };
 
   return (
     <div className="flex w-80 flex-col content-center gap-4 ">
       <ParticipantsList
         participants={participants}
-        onUpdate={onParticipantNameChange}
-        onDelete={onParticipantDeletion}
+        onUpdate={onUpdateHandler}
+        onDelete={onDeletionHandler}
       />
 
       <div className="flex grow gap-4">
         <button
           className="flex grow justify-center rounded-full bg-red-500"
-          onClick={onAddParticipantClick}
+          onClick={onAddHandler}
         >
           <FaPlus className="fill-black" />
         </button>
@@ -95,16 +100,16 @@ const ParticipantsWizard = () => {
 
 const participantsReducer = (
   participants: Participant[],
-  action: { type: string; participant?: Participant },
+  action: { type: ActionTypes; participant?: Participant },
 ): Participant[] => {
   switch (action.type) {
-    case "add": {
+    case ACTION_TYPES.CREATE: {
       return [
         ...participants,
         { id: `${participants[participants.length - 1]!.id + 1}`, name: "" },
       ];
     }
-    case "update": {
+    case ACTION_TYPES.UPDATE: {
       return participants.map((participant) => {
         if (participant.id === action.participant!.id) {
           return action.participant!;
@@ -113,13 +118,11 @@ const participantsReducer = (
         }
       });
     }
-    case "remove": {
+    case ACTION_TYPES.DELETE: {
       return participants.filter(
         (participant) => participant.id !== action.participant!.id,
       );
     }
-    default:
-      throw Error("Unknown action: " + action.type);
   }
 };
 
