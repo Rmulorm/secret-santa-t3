@@ -1,9 +1,9 @@
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
-import { useReducer } from "react";
+import { useReducer, useState } from "react";
 import { FaPlus, FaRandom, FaTrashAlt } from "react-icons/fa";
 
-// import { api } from "~/utils/api";
+import { api } from "~/utils/api";
 
 export default function Home() {
   const { isSignedIn } = useUser();
@@ -29,7 +29,7 @@ export default function Home() {
       <main className="flex h-screen justify-center">
         <div className="w-full border-x border-slate-400 md:max-w-4xl">
           <div className="flex h-full w-full content-center items-center justify-center ">
-            <ParticipantsWizard />
+            <GroupWizard />
           </div>
         </div>
       </main>
@@ -50,10 +50,13 @@ const ACTION_TYPES = {
 } as const;
 type ActionTypes = ObjectValues<typeof ACTION_TYPES>;
 
-const ParticipantsWizard = () => {
+const GroupWizard = () => {
+  const createGroup = api.group.create.useMutation();
+
   const [participants, dispatch] = useReducer(participantsReducer, [
     { id: "0", name: "" } as Participant,
   ]);
+  const [groupName, setGroupName] = useState("");
 
   const onAddHandler = () => {
     dispatch({ type: ACTION_TYPES.CREATE });
@@ -71,8 +74,25 @@ const ParticipantsWizard = () => {
     return participants.filter((participant) => participant.name).length < 2;
   };
 
+  const onSortClick = () => {
+    createGroup.mutate({
+      name: groupName,
+      participants: participants.map((participant) => participant.name),
+    });
+  };
+
   return (
     <div className="flex w-80 flex-col content-center gap-4 ">
+      <input
+        className="grow text-slate-700"
+        type="text"
+        placeholder="Digite o nome do grupo"
+        value={groupName}
+        onChange={(event) => {
+          setGroupName(event.target.value);
+        }}
+      />
+
       <ParticipantsList
         participants={participants}
         onUpdate={onUpdateHandler}
@@ -88,7 +108,7 @@ const ParticipantsWizard = () => {
         </button>
         <button
           className="flex grow justify-center rounded-full bg-red-500 disabled:bg-slate-500"
-          // onClick={onAddParticipantClick}
+          onClick={onSortClick}
           disabled={isSortDisabled()}
         >
           <FaRandom className="fill-black" />
