@@ -22,8 +22,11 @@ export const groupRouter = createTRPCRouter({
         name: z.string(),
       }),
     )
+    .output(
+      z.array(z.object({ name: z.string(), pickName: z.optional(z.string()) })),
+    )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.$transaction(async (tx) => {
+      return await ctx.db.$transaction(async (tx) => {
         const { id: groupId } = await tx.group.create({
           data: {
             name: input.name,
@@ -54,12 +57,12 @@ export const groupRouter = createTRPCRouter({
             data: { pickId: participant.pickId },
           });
         }
-        return new Map(
-          participants.map((participant) => [
-            participant.name,
-            participant.pick?.name,
-          ]),
-        );
+        return participants.map((participant) => {
+          return {
+            name: participant.name,
+            pickName: participant.pick?.name,
+          };
+        });
       });
     }),
 });

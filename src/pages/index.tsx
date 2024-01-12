@@ -2,11 +2,13 @@ import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
 import { useReducer, useState } from "react";
 import { FaPlus, FaRandom, FaTrashAlt } from "react-icons/fa";
+import { LoadingSpinner } from "~/components/loading";
 
 import { api } from "~/utils/api";
 
 export default function Home() {
   const { isSignedIn } = useUser();
+  const createGroupMutation = api.group.create.useMutation();
 
   return (
     <>
@@ -29,7 +31,15 @@ export default function Home() {
       <main className="flex h-screen justify-center">
         <div className="w-full border-x border-slate-400 md:max-w-4xl">
           <div className="flex h-full w-full content-center items-center justify-center ">
-            <GroupWizard />
+            {createGroupMutation.isIdle && (
+              <GroupWizard createGroupMutation={createGroupMutation} />
+            )}
+
+            {createGroupMutation.isLoading && <LoadingSpinner />}
+
+            {createGroupMutation.isSuccess && (
+              <RaffleOutcome createGroupMutation={createGroupMutation} />
+            )}
           </div>
         </div>
       </main>
@@ -50,23 +60,23 @@ const ACTION_TYPES = {
 } as const;
 type ActionTypes = ObjectValues<typeof ACTION_TYPES>;
 
-const GroupWizard = () => {
-  const createGroup = api.group.create.useMutation();
-
+const GroupWizard = (props: {
+  createGroupMutation: ReturnType<typeof api.group.create.useMutation>;
+}) => {
   const [participants, dispatch] = useReducer(participantsReducer, [
     { id: "0", name: "" } as Participant,
   ]);
   const [groupName, setGroupName] = useState("");
 
-  const onAddHandler = () => {
+  const createParticipant = () => {
     dispatch({ type: ACTION_TYPES.CREATE });
   };
 
-  const onUpdateHandler = (id: string, name: string) => {
+  const updateParticipant = (id: string, name: string) => {
     dispatch({ type: ACTION_TYPES.UPDATE, participant: { id, name } });
   };
 
-  const onDeletionHandler = (participant: Participant): void => {
+  const deleteParticipant = (participant: Participant): void => {
     dispatch({ type: ACTION_TYPES.DELETE, participant });
   };
 
@@ -75,7 +85,7 @@ const GroupWizard = () => {
   };
 
   const onSortClick = () => {
-    createGroup.mutate({
+    props.createGroupMutation.mutate({
       name: groupName,
       participants: participants.map((participant) => participant.name),
     });
@@ -95,14 +105,15 @@ const GroupWizard = () => {
 
       <ParticipantsList
         participants={participants}
-        onUpdate={onUpdateHandler}
-        onDelete={onDeletionHandler}
+        createParticipant={createParticipant}
+        updateParticipant={updateParticipant}
+        deleteParticipant={deleteParticipant}
       />
 
       <div className="flex grow gap-4">
         <button
           className="flex grow justify-center rounded-full bg-red-500"
-          onClick={onAddHandler}
+          onClick={createParticipant}
         >
           <FaPlus className="fill-black" />
         </button>
@@ -148,29 +159,54 @@ const participantsReducer = (
 
 const ParticipantsList = (props: {
   participants: Participant[];
-  onUpdate: (id: string, value: string) => void;
-  onDelete: (participant: Participant) => void;
+  createParticipant: () => void;
+  updateParticipant: (id: string, value: string) => void;
+  deleteParticipant: (participant: Participant) => void;
 }) => {
   const { participants } = props;
   return (
     <div className="flex flex-col gap-4">
-      {participants.map((participant) => (
+      {participants.map((participant, index) => (
         <div className="flex w-full gap-4" key={participant.id}>
           <input
             className="grow text-slate-700"
             type="text"
             value={participant.name}
-            onChange={(event) => {
-              props.onUpdate(participant.id, event.target.value);
+            onKeyDown={(event) => {
+              console.log(event.key);
+              if (event.key === "Enter") props.createParticipant();
             }}
+            onChange={(event) =>
+              props.updateParticipant(participant.id, event.target.value)
+            }
+            autoFocus={index === participants.length - 1}
           />
           {participants.length >= 2 && (
-            <button onClick={() => props.onDelete(participant)}>
+            <button onClick={() => props.deleteParticipant(participant)}>
               <FaTrashAlt className="fill-red-100" />
             </button>
           )}
         </div>
       ))}
+    </div>
+  );
+};
+
+const RaffleOutcome = (props: {
+  createGroupMutation: ReturnType<typeof api.group.create.useMutation>;
+}) => {
+  return (
+    <div>
+      {props.createGroupMutation.data!.map((participant, index) => (
+        <h1 key={index}>{`${participant.name} -> ${participant.pickName}`}</h1>
+      ))}
+      <button
+        type="button"
+        className="rounded-full bg-red-700 px-5 py-2.5 text-center font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
+        onClick={() => props.createGroupMutation.reset()}
+      >
+        Novo Sorteio
+      </button>
     </div>
   );
 };
