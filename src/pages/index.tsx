@@ -11,14 +11,14 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Amigue Secrete</title>
+        <title>Miguis</title>
         <meta name="description" content="Amigue Secrete" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <header className="flex justify-end">
         <div className="flex w-full justify-between border-b-2 p-2 px-10">
           <div className="content-center items-center">
-            <h1>Amigue Secrete</h1>
+            <h1>Migis</h1>
           </div>
           <div>
             {!isSignedIn && <SignInButton />}
