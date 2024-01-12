@@ -13,6 +13,17 @@ type GroupParticipant = Prisma.ParticipantGetPayload<
 >;
 
 export const groupRouter = createTRPCRouter({
+  getResult: publicProcedure
+    .input(z.string())
+    .output(z.object({ name: z.string(), pick: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const participant = await ctx.db.participant.findUniqueOrThrow({
+        where: { id: input },
+        include: { pick: true },
+      });
+      return { name: participant.name, pick: participant.pick!.name };
+    }),
+
   create: publicProcedure
     .input(
       z.object({
