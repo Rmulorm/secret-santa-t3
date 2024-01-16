@@ -1,26 +1,27 @@
-import { Prisma } from "@prisma/client";
+import { createId } from "@paralleldrive/cuid2";
+import { TRPCClientError } from "@trpc/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-
-const participantWithPick = Prisma.validator<Prisma.ParticipantDefaultArgs>()({
-  include: { pick: true },
-});
-
-type GroupParticipant = Prisma.ParticipantGetPayload<
-  typeof participantWithPick
->;
+import {
+  type InsertParticipant,
+  groups,
+  participants,
+} from "~/server/db/schema";
 
 export const groupRouter = createTRPCRouter({
   getResult: publicProcedure
     .input(z.string())
     .output(z.object({ name: z.string(), pick: z.string() }))
     .query(async ({ ctx, input }) => {
-      const participant = await ctx.db.participant.findUniqueOrThrow({
-        where: { id: input },
-        include: { pick: true },
+      const participant = await ctx.db.query.participants.findFirst({
+        where: (participant, { eq }) => eq(participant.id, input),
+        with: { pick: true },
       });
+      if (!participant) {
+        throw new TRPCClientError(`No result for id "${input}"`);
+      }
       return { name: participant.name, pick: participant.pick!.name };
     }),
 
@@ -33,52 +34,37 @@ export const groupRouter = createTRPCRouter({
         name: z.string(),
       }),
     )
-    .output(
-      z.array(z.object({ name: z.string(), pickName: z.optional(z.string()) })),
-    )
+    .output(z.string())
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.$transaction(async (tx) => {
-        const { id: groupId } = await tx.group.create({
-          data: {
-            name: input.name,
-            participants: {
-              createMany: {
-                data: input.participants.map((name) => ({
-                  name,
-                })),
-              },
-            },
-          },
-        });
+      const groupId = createId();
 
-        const participants = await tx.group
-          .findUnique({ where: { id: groupId } })
-          .participants({ include: { pick: true } });
+      const newParticipants = input.participants.map(
+        (participant) =>
+          ({
+            id: createId(),
+            name: participant,
+            groupId: groupId,
+          }) as InsertParticipant,
+      );
+      drawSecretSanta(newParticipants);
 
-        if (!participants) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Group with no participants created",
-          });
-        }
-        drawSecretSanta(participants);
-        for (const participant of participants) {
-          await tx.participant.update({
-            where: { id: participant.id },
-            data: { pickId: participant.pickId },
-          });
-        }
-        return participants.map((participant) => {
-          return {
-            name: participant.name,
-            pickName: participant.pick?.name,
-          };
+      try {
+        await ctx.db.transaction(async (tx) => {
+          await tx.insert(groups).values({ id: groupId, name: input.name });
+          await tx.insert(participants).values(newParticipants);
         });
-      });
+      } catch (e) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Something went wrong 🙁",
+        });
+      }
+
+      return groupId;
     }),
 });
 
-const drawSecretSanta = (participants: GroupParticipant[]) => {
+const drawSecretSanta = (participants: InsertParticipant[]) => {
   const unselected = [...participants];
   const firstPicker = unselected.splice(
     Math.floor(Math.random() * participants.length),
@@ -89,7 +75,6 @@ const drawSecretSanta = (participants: GroupParticipant[]) => {
     const pick = unselected.length
       ? unselected.splice(Math.floor(Math.random() * unselected.length), 1)[0]!
       : firstPicker;
-    currentPicker.pick = pick;
     currentPicker.pickId = pick.id;
     currentPicker = pick;
   } while (currentPicker !== firstPicker);
