@@ -1,5 +1,5 @@
-import Home from "./home-page";
+import GroupWizard from "./groupWizard";
 
 export default function Page() {
-  return <Home />;
+  return <GroupWizard />;
 }

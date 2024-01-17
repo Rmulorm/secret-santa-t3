@@ -9,8 +9,13 @@ import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
 import { Input } from "~/components/ui/input";
 import { Separator } from "~/components/ui/separator";
+import {
+  PARTICIPANTS_ACTIONS,
+  type Participant,
+  participantsReducer,
+} from "./participantsReducer";
 
-export default function Home() {
+export default function GroupWizard() {
   const router = useRouter();
 
   const createGroupMutation = api.group.create.useMutation({
@@ -22,7 +27,7 @@ export default function Home() {
   return (
     <div className="flex h-full w-full content-center items-center justify-center ">
       {createGroupMutation.isIdle && (
-        <GroupWizard createGroupMutation={createGroupMutation} />
+        <Editor createGroupMutation={createGroupMutation} />
       )}
 
       {createGroupMutation.isLoading && <LoadingSpinner />}
@@ -30,20 +35,7 @@ export default function Home() {
   );
 }
 
-interface Participant {
-  id: string;
-  name: string;
-}
-
-type ObjectValues<T> = T[keyof T];
-const ACTION_TYPES = {
-  CREATE: "create",
-  UPDATE: "update",
-  DELETE: "delete",
-} as const;
-type ActionTypes = ObjectValues<typeof ACTION_TYPES>;
-
-const GroupWizard = (props: {
+const Editor = (props: {
   createGroupMutation: ReturnType<typeof api.group.create.useMutation>;
 }) => {
   const [participants, dispatch] = useReducer(participantsReducer, [
@@ -52,15 +44,15 @@ const GroupWizard = (props: {
   const [groupName, setGroupName] = useState("");
 
   const createParticipant = () => {
-    dispatch({ type: ACTION_TYPES.CREATE });
+    dispatch({ type: PARTICIPANTS_ACTIONS.CREATE });
   };
 
   const updateParticipant = (id: string, name: string) => {
-    dispatch({ type: ACTION_TYPES.UPDATE, participant: { id, name } });
+    dispatch({ type: PARTICIPANTS_ACTIONS.UPDATE, participant: { id, name } });
   };
 
   const deleteParticipant = (participant: Participant): void => {
-    dispatch({ type: ACTION_TYPES.DELETE, participant });
+    dispatch({ type: PARTICIPANTS_ACTIONS.DELETE, participant });
   };
 
   const isSortDisabled = () => {
@@ -77,7 +69,7 @@ const GroupWizard = (props: {
   return (
     <div className="flex w-80 flex-col content-center gap-4 ">
       <Input
-        className="grow "
+        className="grow"
         type="text"
         placeholder="Nome do grupo..."
         value={groupName}
@@ -115,34 +107,6 @@ const GroupWizard = (props: {
       </div>
     </div>
   );
-};
-
-const participantsReducer = (
-  participants: Participant[],
-  action: { type: ActionTypes; participant?: Participant },
-): Participant[] => {
-  switch (action.type) {
-    case ACTION_TYPES.CREATE: {
-      return [
-        ...participants,
-        { id: `${participants[participants.length - 1]!.id + 1}`, name: "" },
-      ];
-    }
-    case ACTION_TYPES.UPDATE: {
-      return participants.map((participant) => {
-        if (participant.id === action.participant!.id) {
-          return action.participant!;
-        } else {
-          return participant;
-        }
-      });
-    }
-    case ACTION_TYPES.DELETE: {
-      return participants.filter(
-        (participant) => participant.id !== action.participant!.id,
-      );
-    }
-  }
 };
 
 const ParticipantsList = (props: {
