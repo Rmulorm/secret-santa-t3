@@ -8,6 +8,7 @@ import { type Metadata } from "next";
 import { TRPCReactProvider } from "~/trpc/react";
 import { TopBarUserSection } from "~/components/topBarUser";
 import { cn } from "~/lib/utils";
+import Link from "next/link";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,7 +37,12 @@ export default function RootLayout({
         <ClerkProvider>
           <TRPCReactProvider>
             <TopBar />
-            {children}
+            <main className="flex h-screen justify-center">
+              <div className="w-full border-x md:max-w-4xl">
+                <div className="h-16" />
+                {children}
+              </div>
+            </main>
           </TRPCReactProvider>
         </ClerkProvider>
       </body>
@@ -46,13 +52,12 @@ export default function RootLayout({
 
 const TopBar = () => {
   return (
-    <header className="flex justify-end">
-      <div className="flex w-full justify-between border-b-2 p-2 px-10">
-        <div className="content-center items-center">
-          <h1>Miguis</h1>
-        </div>
-        <TopBarUserSection />
-      </div>
+    <header className="fixed left-0 right-0 top-0 flex h-16 items-center justify-between p-2 px-8 shadow-md transition-all duration-500 dark:bg-gray-800">
+      <Link className="flex items-center gap-2" href="/">
+        <h1>Miguis</h1>
+      </Link>
+
+      <TopBarUserSection />
     </header>
   );
 };

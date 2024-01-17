@@ -7,6 +7,8 @@ import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
 
 import { api } from "~/trpc/react";
+import { Input } from "~/components/ui/input";
+import { Separator } from "~/components/ui/separator";
 
 export default function Home() {
   const router = useRouter();
@@ -18,17 +20,13 @@ export default function Home() {
   });
 
   return (
-    <main className="flex h-screen justify-center">
-      <div className="w-full border-x  md:max-w-4xl">
-        <div className="flex h-full w-full content-center items-center justify-center ">
-          {createGroupMutation.isIdle && (
-            <GroupWizard createGroupMutation={createGroupMutation} />
-          )}
+    <div className="flex h-full w-full content-center items-center justify-center ">
+      {createGroupMutation.isIdle && (
+        <GroupWizard createGroupMutation={createGroupMutation} />
+      )}
 
-          {createGroupMutation.isLoading && <LoadingSpinner />}
-        </div>
-      </div>
-    </main>
+      {createGroupMutation.isLoading && <LoadingSpinner />}
+    </div>
   );
 }
 
@@ -78,8 +76,8 @@ const GroupWizard = (props: {
 
   return (
     <div className="flex w-80 flex-col content-center gap-4 ">
-      <input
-        className="grow text-slate-700"
+      <Input
+        className="grow "
         type="text"
         placeholder="Nome do grupo..."
         value={groupName}
@@ -87,6 +85,8 @@ const GroupWizard = (props: {
           setGroupName(event.target.value);
         }}
       />
+
+      <Separator />
 
       <ParticipantsList
         participants={participants}
@@ -96,22 +96,22 @@ const GroupWizard = (props: {
       />
 
       <div className="flex grow gap-4">
-        <button
-          className="flex grow justify-center rounded-full bg-red-500"
+        <Button
+          className="flex grow justify-center rounded-full"
           onClick={createParticipant}
         >
-          <PlusIcon className="fill-black" />
-        </button>
-        <button
-          className="flex grow justify-center rounded-full bg-red-500 disabled:bg-slate-500"
+          <PlusIcon className="size-8" />
+        </Button>
+        <Button
+          className="flex grow justify-center rounded-full"
           onClick={(e) => {
             e.preventDefault();
             onSortClick();
           }}
           disabled={isSortDisabled()}
         >
-          <ShuffleIcon className="fill-black" />
-        </button>
+          <ShuffleIcon className="size-8" />
+        </Button>
       </div>
     </div>
   );
@@ -156,8 +156,8 @@ const ParticipantsList = (props: {
     <div className="flex flex-col gap-4">
       {participants.map((participant, index) => (
         <div className="flex w-full gap-4" key={participant.id}>
-          <input
-            className="grow text-slate-700"
+          <Input
+            className="grow"
             type="text"
             placeholder="Nome do participante..."
             value={participant.name}
@@ -172,11 +172,11 @@ const ParticipantsList = (props: {
           />
           {participants.length >= 2 && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => props.deleteParticipant(participant)}
             >
-              <TrashIcon className="fill-red-100" />
+              <TrashIcon className="size-6 " />
             </Button>
           )}
         </div>
