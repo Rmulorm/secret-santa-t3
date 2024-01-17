@@ -7,6 +7,7 @@ import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { TopBarUserSection } from "~/components/topBarUser";
+import { cn } from "~/lib/utils";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,7 +27,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`font-sans ${inter.variable}`}>
+      <body
+        className={cn(
+          "bg-background dark min-h-screen font-sans antialiased",
+          inter.variable,
+        )}
+      >
         <ClerkProvider>
           <TRPCReactProvider>
             <TopBar />

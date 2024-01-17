@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
-import { FaPlus, FaRandom, FaTrashAlt } from "react-icons/fa";
+import { PlusIcon, ShuffleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
 
 import { api } from "~/trpc/react";
 
@@ -18,7 +19,7 @@ export default function Home() {
 
   return (
     <main className="flex h-screen justify-center">
-      <div className="w-full border-x border-slate-400 md:max-w-4xl">
+      <div className="w-full border-x  md:max-w-4xl">
         <div className="flex h-full w-full content-center items-center justify-center ">
           {createGroupMutation.isIdle && (
             <GroupWizard createGroupMutation={createGroupMutation} />
@@ -80,7 +81,7 @@ const GroupWizard = (props: {
       <input
         className="grow text-slate-700"
         type="text"
-        placeholder="Digite o nome do grupo"
+        placeholder="Nome do grupo..."
         value={groupName}
         onChange={(event) => {
           setGroupName(event.target.value);
@@ -99,7 +100,7 @@ const GroupWizard = (props: {
           className="flex grow justify-center rounded-full bg-red-500"
           onClick={createParticipant}
         >
-          <FaPlus className="fill-black" />
+          <PlusIcon className="fill-black" />
         </button>
         <button
           className="flex grow justify-center rounded-full bg-red-500 disabled:bg-slate-500"
@@ -109,7 +110,7 @@ const GroupWizard = (props: {
           }}
           disabled={isSortDisabled()}
         >
-          <FaRandom className="fill-black" />
+          <ShuffleIcon className="fill-black" />
         </button>
       </div>
     </div>
@@ -158,6 +159,7 @@ const ParticipantsList = (props: {
           <input
             className="grow text-slate-700"
             type="text"
+            placeholder="Nome do participante..."
             value={participant.name}
             onKeyDown={(event) => {
               console.log(event.key);
@@ -169,9 +171,13 @@ const ParticipantsList = (props: {
             autoFocus={index === participants.length - 1}
           />
           {participants.length >= 2 && (
-            <button onClick={() => props.deleteParticipant(participant)}>
-              <FaTrashAlt className="fill-red-100" />
-            </button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => props.deleteParticipant(participant)}
+            >
+              <TrashIcon className="fill-red-100" />
+            </Button>
           )}
         </div>
       ))}
