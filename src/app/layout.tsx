@@ -37,8 +37,8 @@ export default function RootLayout({
         <ClerkProvider>
           <TRPCReactProvider>
             <TopBar />
-            <main className="flex h-screen justify-center">
-              <div className="w-full border-x md:max-w-4xl">
+            <main className="flex justify-center">
+              <div className="h-dvh w-full md:max-w-4xl">
                 <div className="h-16" />
                 {children}
               </div>
@@ -54,7 +54,7 @@ const TopBar = () => {
   return (
     <header className="fixed left-0 right-0 top-0 flex h-16 items-center justify-between bg-primary p-2 px-8 text-2xl text-foreground shadow-md transition-all duration-500 dark:bg-gray-800">
       <Link className="flex items-center gap-2" href="/">
-        <h1>Miguis</h1>
+        <h1>Migui</h1>
       </Link>
 
       <TopBarUserSection />

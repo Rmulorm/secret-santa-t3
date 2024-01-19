@@ -25,7 +25,7 @@ export default function GroupWizard() {
   });
 
   return (
-    <div className="flex h-full w-full content-center items-center justify-center ">
+    <div className="flex w-full grow content-center items-center justify-center py-32 ">
       {createGroupMutation.isIdle && (
         <Editor createGroupMutation={createGroupMutation} />
       )}
