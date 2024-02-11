@@ -2,15 +2,15 @@ import { createId } from "@paralleldrive/cuid2";
 import { relations, sql } from "drizzle-orm";
 import {
   index,
-  mysqlTableCreator,
+  pgTableCreator,
   timestamp,
   varchar,
   text,
-} from "drizzle-orm/mysql-core";
+} from "drizzle-orm/pg-core";
 
-export const mysqlTable = mysqlTableCreator((name) => `migui_${name}`);
+export const table = pgTableCreator((name) => `migui_${name}`);
 
-export const groups = mysqlTable(
+export const groups = table(
   "group",
   {
     id: varchar("id", { length: 128 })
@@ -29,7 +29,7 @@ export const groups = mysqlTable(
 );
 export type InsertGroup = typeof groups.$inferInsert;
 
-export const participants = mysqlTable("participant", {
+export const participants = table("participant", {
   id: varchar("id", { length: 128 })
     .primaryKey()
     .$defaultFn(() => createId()),
