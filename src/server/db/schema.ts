@@ -39,6 +39,7 @@ export const participants = table("participant", {
 
   // Fields
   name: varchar("name", { length: 256 }).notNull(),
+  password: varchar("password", { length: 256 }),
   pickId: text("pickId"),
   groupId: text("groupId"),
 });

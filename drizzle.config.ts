@@ -8,5 +8,5 @@ export default {
   dbCredentials: {
     connectionString: env.POSTGRES_URL,
   },
-  tablesFilter: ["secret-santa_*"],
+  tablesFilter: ["migui_*"],
 } satisfies Config;
